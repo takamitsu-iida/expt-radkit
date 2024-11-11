@@ -275,20 +275,19 @@ Warning: Potential Security Risk Aheadと表示されますが、Advancedを選�
 
 `Register superadmin user` 画面が表示されますので、superadminのパスワードを設定します。
 
-SSOでログインします。
+Service Identity Certificate の部分にある 「Enroll with SSO」 を選択してサービスを有効にします。
 
 CCOに登録してあるメールアドレスを入力します。
 
 表示されるリンクをクリックして、Ciscoの認証ページでログインします。
 
-重要な情報が画面上に表示されますので、それをメモします。
+下のページに戻ってみると、重要な情報が画面の上の部分に表示されますので、それをメモします。
 
 ```bash
-Domain: PROD Service ID: r7ih-z54p-5297
+Domain: PROD Service ID: 81pr-id0q-y4kt
 ```
 
 左側のDevicesから装置の情報を登録します。
-
 
 <BR>
 
