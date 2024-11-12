@@ -6,11 +6,42 @@
 
 Hyper-Vを有効にしたWindows11上でCMLを動かしています。
 
-このWindows11には物理NICが5個あり、そのうちの2個をCMLとブリッジしています。★ここ重要
+このWindows11には物理NICが5個あり、そのうち2個を利用しています。
 
-一つは実際にインターネットに出ていけるLAN、もう一つのNICはリンクアップしているだけの何もつながっていないNICです。
+一つは実際にインターネットに出ていけるLAN、もう一つはリンクアップしているだけの何もつながっていないNICです。
 
-CMLラボ内の仮想Ubuntuサーバからwgetでファイルを落とせるように、どこかに自分で制御できるHTTPサーバを立てておきます。
+<br>
+
+![物理構成](./assets/CML_PhysicalDiagram.png)
+
+<br>
+
+利用している2個のNICをCMLとブリッジで繋いでいます。★ここ重要
+
+![論理構成](./assets/CML_LogicalDiagram.png)
+
+<br>
+
+CML内のラボ機器に外部のアドレスを割り当てたいときには `bridge0` につなぎます。
+
+外部接続は不要なものの、母艦となるWindowsとは通信したい、という場合には `bridge1` につなぎます。
+
+CMLの異なるラボの機器で直接通信したい、という場合にも `bridge1` を経由すると便利です。
+
+<br><br>
+
+CMLのラボの中にRADKit serviceをインストールするUbuntuを立てます。
+
+ラボの構成はこのような感じです。
+
+<br>
+
+![ラボ構成](./assets/CML_LaboDiagram.png)
+
+<br>
+
+RADKitのインストーラはシェルスクリプトなので、それをUbuntuに転送しなければいけません。
+CMLラボ内のUbuntuからwgetでファイルを落とせるように、どこかに自分で制御できるHTTPサーバを立てておきます。
 ここでは母艦になっているWindows11でIISを有効にしておきます。
 
 <br>
@@ -39,20 +70,24 @@ https://radkit.cisco.com/
 
 Ubuntuを作成します。
 
-UbuntuはRADKitをインストールするマシンです。
+UbuntuはRADKit serviceをインストールするマシンです。
 
 インターネット上のクラウドと通信しますので外部接続が必要です。これはNAT接続を利用します。
 
-RADKitの設定はブラウザを使ったGUI操作になりますので、Ubuntuに対してブラウザで接続できなければいけません。
+RADKit serviceの設定はブラウザを使ったGUI操作になりますので、Ubuntuに対してブラウザで接続できなければいけません。
 その経路としてもう一つのNICを使い、母艦になっているWindows11からブラウザでアクセスできるようにします。
 母艦のWindows11はこのNICに対して192.168.0.198/24のアドレスを固定で設定していますので、
 RADKitのUbuntuには192.168.0.1/24のアドレスを採番します。
 
-RADKitは同時にCMLのラボ機器とも接続します。それ用のLANも必要ですので、合計3本足のマシンになります。
+RADKit serviceは同時にCMLのラボ機器とも接続します。それ用のLANも必要ですので、合計3本足のマシンになります。
+
+整理すると、
 
 - ens2はNATで外に出ていく通信に使うインタフェース（dhcp）
 - ens3は母艦のWindows11とブリッジで接続するインタフェース（192.168.0.1/24）
 - ens4はラボ内のネットワーク機器と接続するインタフェース(192.168.254.1/24)
+
+となります。
 
 UbuntuのTagsには `serial:50000` と設定して5000番ポートでシリアルコンソール接続できるようにします。
 
@@ -130,7 +165,7 @@ runcmd:
 
 <br>
 
-TeraTERMを起動してポート5000番にtelnetして、Ubuntuのシリアルコンソールに接続します。
+TeraTERMを起動してCMLのポート5000番にtelnetして、Ubuntuのシリアルコンソールに接続します。
 
 rootでログインします。
 
@@ -234,9 +269,7 @@ Ubuntuに割りあてられているIPアドレスを確認します。
 ip address
 ```
 
-実行例。下記の例ではens2に192.168.255.167が割り当てられています。
-
-このアドレスをメモしておきます。
+実行例。
 
 ```bash
 root@radkit:~# ip address
@@ -294,7 +327,7 @@ rtt min/avg/max/mdev = 6.650/7.781/9.232/0.842 ms
 
 <BR>
 
-外部接続が問題なければ、母艦のWindows11のブラウザからRADKitのURL `https://192.168.0.1:8081` に接続します。
+外部接続が問題なければ、母艦のWindows11のブラウザからRADKit serviceのURL `https://192.168.0.1:8081` に接続します。
 
 初めて接続すると superadmin user のパスワードを設定せよ、と言われますので設定します。
 
@@ -312,6 +345,11 @@ Acceptを押します。
 
 > 例： Domain: PROD Service ID: 1ryq-e8n8-5g5n
 
+<br>
+
+![RADKitスクリーンショット](./assets/RADKit_Screenshot.png)
+
+<br>
 
 画面左側のRemote Usersから接続許可を払い出すユーザを登録します。最初は自分を登録しておけばいいでしょう。
 
@@ -329,9 +367,6 @@ sh cisco_radkit_1.7.4_linux_x86_64.sh
 
 customを選択します。
 
-
-
-
 ~/.bashrcに以下を追加してPATHを通します。
 
 ```bash
@@ -339,7 +374,6 @@ customを選択します。
 RADKIT_ROOT="$HOME/.local/radkit"
 export PATH="$RADKIT_ROOT/bin:$PATH"
 ```
-
 
 ```bash
 radkit-client
@@ -365,7 +399,7 @@ $ radkit-interactive --domain PROD --service-sn 1ryq-e8n8-5g5n --sso-email iida@
 
 ### クライアントを削除
 
-インストールしたときに、削除方法が表示されています。
+インストールしたときに削除方法が表示されています。
 
 ```bash
 ┌─ WARNING ────────────────────────────────────────────────────────────┐
