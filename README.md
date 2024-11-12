@@ -6,6 +6,10 @@
 
 Hyper-Vを有効にしたWindows11上でCMLを動かしています。
 
+このWindows11には物理NICが5個あり、そのうちの2個をCMLとブリッジしています。★ここ重要
+
+一つは実際にインターネットに出ていけるLAN、もう一つのNICはリンクアップしているだけの何もつながっていないNICです。
+
 CMLラボ内の仮想Ubuntuサーバからwgetでファイルを落とせるように、どこかに自分で制御できるHTTPサーバを立てておきます。
 ここでは母艦になっているWindows11でIISを有効にしておきます。
 
@@ -33,14 +37,22 @@ https://radkit.cisco.com/
 
 ## CMLのラボに仮想マシンを作成する
 
-Ubuntuとdesktopマシンを作成します。
+Ubuntuを作成します。
 
-UbuntuはRADKitをインストールするマシン、desktopマシンはRADKitの設定をブラウザで行うためのマシンです。
+UbuntuはRADKitをインストールするマシンです。
 
-Ubuntuはインタフェースを追加して2本足にします。
+インターネット上のクラウドと通信しますので外部接続が必要です。これはNAT接続を利用します。
+
+RADKitの設定はブラウザを使ったGUI操作になりますので、Ubuntuに対してブラウザで接続できなければいけません。
+その経路としてもう一つのNICを使い、母艦になっているWindows11からブラウザでアクセスできるようにします。
+母艦のWindows11はこのNICに対して192.168.0.198/24のアドレスを固定で設定していますので、
+RADKitのUbuntuには192.168.0.1/24のアドレスを採番します。
+
+RADKitは同時にCMLのラボ機器とも接続します。それ用のLANも必要ですので、合計3本足のマシンになります。
 
 - ens2はNATで外に出ていく通信に使うインタフェース（dhcp）
-- ens4はラボ内のネットワーク機器と接続するインタフェース(192.168.254.254/24)
+- ens3は母艦のWindows11とブリッジで接続するインタフェース（192.168.0.1/24）
+- ens4はラボ内のネットワーク機器と接続するインタフェース(192.168.254.1/24)
 
 UbuntuのTagsには `serial:50000` と設定して5000番ポートでシリアルコンソール接続できるようにします。
 
@@ -74,11 +86,16 @@ write_files:
           ens3:
             dhcp4: false
             addresses:
-              - 192.168.254.254/24
+              - 192.168.0.1/24
             #gateway4: 192.168.254.1
-            routes:
-              - to: 10.0.0.0/8
-                via: 192.168.254.1
+
+          ens4:
+            dhcp4: false
+            addresses:
+              - 192.168.254.1/24
+            #routes:
+            #  - to: 10.0.0.0/8
+            #    via: 192.168.254.101
 
         version: 2
 
@@ -103,25 +120,6 @@ runcmd:
 
   # - wget -P /tmp 192.168.122.198/cisco_radkit_1.7.4_linux_x86_64.sh
 
-```
-
-desktopマシンはインタフェースを追加します。
-
-desktopマシンのeth1とUbuntuを接続します。
-
-以下のシェルスクリプトをCONFIGに流し込んで、ホスト名とログインユーザを設定します。
-
-```bash
-# this is a shell script which will be sourced at boot
-hostname desktop
-
-# configurable user account
-USERNAME=cisco
-PASSWORD=cisco
-
-# configure networking
-# ifconfig eth1 192.168.0.1 netmask 255.255.255.0 up
-# route add -net 10.0.0.0/8 dev eth1
 ```
 
 <br>
@@ -203,7 +201,7 @@ mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj
 
 ```
 
-これら注意喚起メッセージに素直に従うなら、次のスクリプトを実行します。
+これら注意喚起メッセージに素直に従って、次のスクリプトを実行します。
 
 ```bash
 sh /opt/radkit/versions/1.7.4/post-install.sh
@@ -241,53 +239,83 @@ ip address
 このアドレスをメモしておきます。
 
 ```bash
-root@radkit:~# ip a
+root@radkit:~# ip address
 2: ens2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
-    link/ether 52:54:00:06:59:b3 brd ff:ff:ff:ff:ff:ff
+    link/ether 52:54:00:19:eb:e6 brd ff:ff:ff:ff:ff:ff
     altname enp0s2
-    inet 192.168.255.167/24 metric 100 brd 192.168.255.255 scope global dynamic ens2
-       valid_lft 2315sec preferred_lft 2315sec
-    inet6 fe80::5054:ff:fe06:59b3/64 scope link
+    inet 192.168.255.114/24 metric 100 brd 192.168.255.255 scope global dynamic ens2
+       valid_lft 3418sec preferred_lft 3418sec
+    inet6 fe80::5054:ff:fe19:ebe6/64 scope link
+       valid_lft forever preferred_lft forever
+3: ens3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 52:54:00:02:14:24 brd ff:ff:ff:ff:ff:ff
+    altname enp0s3
+    inet 192.168.0.1/24 brd 192.168.0.255 scope global ens3
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fe02:1424/64 scope link
+       valid_lft forever preferred_lft forever
+4: ens4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 52:54:00:00:0f:11 brd ff:ff:ff:ff:ff:ff
+    altname enp0s4
+    inet 192.168.254.1/24 brd 192.168.254.255 scope global ens4
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fe00:f11/64 scope link
        valid_lft forever preferred_lft forever
 ```
 
-操作する端末をdesktopに切り替えます。
+ens2の192.168.255.114/24はNATで外部に接続するためのアドレスです。
 
-desktopマシンのアイコンを右クリックしてVncを選択します。
+ens3の192.168.0.1/24は固定で設定したものです。このLAN上には母艦のWindows11しか存在しません。
 
-左上の Applications → Settings → keyboard を選択します。
+ens4の192.168.254.1/24は固定で設定したもので、ラボ内の機器と接続するためのアドレスです。
 
-Layoutタブを選択。
-
-Use system defaultsのトグルスイッチをオフに変更。
-
-+Addで Japanese → Japanese(Kana 86)を選択します。
-
-English(US)を -Remove します。
-
-Firefoxを起動して、
-
-`https://ubuntuのIPアドレス:8081`
-
-にアクセスします。
-
-Warning: Potential Security Risk Aheadと表示されますが、Advancedを選択して先に進みます。
-
-`Register superadmin user` 画面が表示されますので、superadminのパスワードを設定します。
-
-Service Identity Certificate の部分にある 「Enroll with SSO」 を選択してサービスを有効にします。
-
-CCOに登録してあるメールアドレスを入力します。
-
-表示されるリンクをクリックして、Ciscoの認証ページでログインします。
-
-下のページに戻ってみると、重要な情報が画面の上の部分に表示されますので、それをメモします。
+RADKitはCiscoのクラウドと通信しますので、インターネットとの接続性を確認します。
 
 ```bash
-Domain: PROD Service ID: 81pr-id0q-y4kt
+root@radkit:~# ping www.google.co.jp
+PING www.google.co.jp (172.217.26.227) 56(84) bytes of data.
+64 bytes from bom05s09-in-f3.1e100.net (172.217.26.227): icmp_seq=1 ttl=118 time=6.65 ms
+64 bytes from nrt12s51-in-f3.1e100.net (172.217.26.227): icmp_seq=2 ttl=118 time=7.15 ms
+64 bytes from bom05s09-in-f3.1e100.net (172.217.26.227): icmp_seq=3 ttl=118 time=9.23 ms
+64 bytes from nrt12s51-in-f3.1e100.net (172.217.26.227): icmp_seq=4 ttl=118 time=7.35 ms
+64 bytes from nrt12s51-in-f3.1e100.net (172.217.26.227): icmp_seq=5 ttl=118 time=8.24 ms
+64 bytes from bom05s09-in-f3.1e100.net (172.217.26.227): icmp_seq=6 ttl=118 time=8.06 ms
+^C
+--- www.google.co.jp ping statistics ---
+6 packets transmitted, 6 received, 0% packet loss, time 5008ms
+rtt min/avg/max/mdev = 6.650/7.781/9.232/0.842 ms
 ```
 
-左側のDevicesから装置の情報を登録します。
+<BR>
+
+> RADKit serviceが接続する宛先はここですが、pingには応答しません。
+>
+> wss://prod.radkit-cloud.cisco.com/forwarder-1/
+
+<BR>
+
+外部接続が問題なければ、母艦のWindows11のブラウザからRADKitのURL `https://192.168.0.1:8081` に接続します。
+
+初めて接続すると superadmin user のパスワードを設定せよ、と言われますので設定します。
+
+パスワードを設定したら、最初にクラウドと接続してサービスIDを取得します。
+
+画面内の「Enroll with SSO」をクリックします。
+
+CCOに登録したメールアドレスを入力します。
+
+`Follow the SSO login link to continue: [CLICK HERE]` をクリックすると認証が走ります。
+
+Acceptを押します。
+
+もとのページに戻ると、画面の上部に重要な情報が表示されていますので、それをコピペしてどこかに保存しておきます。
+
+> 例： Domain: PROD Service ID: 1ryq-e8n8-5g5n
+
+
+画面左側のRemote Usersから接続許可を払い出すユーザを登録します。最初は自分を登録しておけばいいでしょう。
+
+画面左側のDevicesから装置の情報を登録します。
 
 <BR>
 
@@ -300,6 +328,9 @@ sh cisco_radkit_1.7.4_linux_x86_64.sh
 ```
 
 customを選択します。
+
+
+
 
 ~/.bashrcに以下を追加してPATHを通します。
 
@@ -324,6 +355,21 @@ sso_login("iida@fujitsu.com)
 
 ラボ機器へのログインは次のようにします。
 
+domainとservice-snは先程コピペしておいた情報です。
+
 ```bash
-$ radkit-interactive --domain PROD --service-sn r7ih-z54p-5297 --sso-email iida@fujitsu.com --device csr1000v-1
+$ radkit-interactive --domain PROD --service-sn 1ryq-e8n8-5g5n --sso-email iida@fujitsu.com --device r1
+```
+
+<br>
+
+### クライアントを削除
+
+インストールしたときに、削除方法が表示されています。
+
+```bash
+┌─ WARNING ────────────────────────────────────────────────────────────┐
+│ Make sure that /home/iida/.local/radkit/bin is in your PATH.         │
+│ To uninstall, run: /home/iida/.local/radkit/versions/1.7.4/uninstall │
+└──────────────────────────────────────────────────────────────────────┘
 ```
