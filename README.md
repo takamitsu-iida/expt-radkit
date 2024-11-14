@@ -775,6 +775,7 @@ ls -l
 
 ```bash
 pip install -f . cisco_radkit_client
+pip install -f . cisco_radkit_genie
 ```
 
 これで.venvディレクトリの配下にインストールされます。
@@ -821,3 +822,107 @@ R1#
 マニュアルを読むと、もっと便利に使えそうな感じです。
 
 https://radkit.cisco.com/docs/client_api/client_api.html#
+
+pyATSのGenieを使えばテキストの出力をPythonの辞書型に変換できるので、後続の処理に繋げやすいです。
+
+```python
+DOMAIN = "PROD"
+CLIENT_ID = "iida@fujitsu.com"
+SERVICE_ID = "1ryq-e8n8-5g5n"
+
+DEVICE_NAME = "r1"
+COMMAND = "show ip int brief"
+
+with Client.create() as client:
+
+   connect_data = client.oauth_connect_only(CLIENT_ID, domain=DOMAIN)
+
+   ws = create_connection(str(connect_data.token_url))
+   webbrowser.open(str(connect_data.sso_url))
+   token = json.loads(ws.recv())['access_token']
+   token_client = client.access_token_login(token, domain=DOMAIN)
+   service = token_client.service(SERVICE_ID).wait()
+   single_response = service.inventory[DEVICE_NAME].exec(COMMAND).wait()
+   parsed_result = radkit_genie.parse(single_response)
+   json_result = parsed_result[DEVICE_NAME][COMMAND].data
+   print(json.dumps(json_result, indent=2))
+```
+
+実行例。
+
+```bash
+(.venv) iida@FCCLS0073460:~/git/expt-radkit$ bin/radkit_ex2.py
+{
+  "interface": {
+    "GigabitEthernet1": {
+      "ip_address": "192.168.254.101",
+      "interface_is_ok": "YES",
+      "method": "NVRAM",
+      "status": "up",
+      "protocol": "up"
+    },
+    "GigabitEthernet2": {
+      "ip_address": "unassigned",
+      "interface_is_ok": "YES",
+      "method": "NVRAM",
+      "status": "administratively down",
+      "protocol": "down"
+    },
+    "GigabitEthernet3": {
+      "ip_address": "unassigned",
+      "interface_is_ok": "YES",
+      "method": "NVRAM",
+      "status": "administratively down",
+      "protocol": "down"
+    },
+    "GigabitEthernet4": {
+      "ip_address": "unassigned",
+      "interface_is_ok": "YES",
+      "method": "NVRAM",
+      "status": "administratively down",
+      "protocol": "down"
+    },
+    "GigabitEthernet5": {
+      "ip_address": "unassigned",
+      "interface_is_ok": "YES",
+      "method": "NVRAM",
+      "status": "administratively down",
+      "protocol": "down"
+    },
+    "GigabitEthernet6": {
+      "ip_address": "unassigned",
+      "interface_is_ok": "YES",
+      "method": "NVRAM",
+      "status": "administratively down",
+      "protocol": "down"
+    },
+    "GigabitEthernet7": {
+      "ip_address": "unassigned",
+      "interface_is_ok": "YES",
+      "method": "NVRAM",
+      "status": "administratively down",
+      "protocol": "down"
+    },
+    "GigabitEthernet8": {
+      "ip_address": "unassigned",
+      "interface_is_ok": "YES",
+      "method": "NVRAM",
+      "status": "administratively down",
+      "protocol": "down"
+    },
+    "R1#": {
+      "ip_address": "",
+      "interface_is_ok": "",
+      "method": "",
+      "status": "",
+      "protocol": ""
+    }
+  },
+  "_exclude": [
+    "method",
+    "(Tunnel.*)"
+  ]
+}
+```
+
+よく見ると "R1#" というインタフェースが入ってますが、これはプロンプト部分がテキスト出力に入ってしまってるからですね。
