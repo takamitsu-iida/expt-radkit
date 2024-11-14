@@ -6,12 +6,13 @@
 #
 # 標準ライブラリのインポート
 #
+import json
 import logging
 import sys
-from pathlib import Path
-
+import time
 import webbrowser
-import json
+
+from pathlib import Path
 
 #
 # サードパーティライブラリのインポート
@@ -105,6 +106,21 @@ logger.addHandler(file_handler)
 # ここからスクリプト
 #
 
+# トークンを保存するファイルのパス
+TOKEN_FILE = log_dir.joinpath('token_cache.json')
+
+def save_token(token):
+    with open(TOKEN_FILE, 'w') as f:
+        json.dump({'access_token': token, 'timestamp': time.time()}, f)
+
+def load_token():
+    if TOKEN_FILE.exists():
+        with open(TOKEN_FILE, 'r') as f:
+            data = json.load(f)
+            return data.get('access_token'), data.get('timestamp')
+    return None, None
+
+
 if __name__ == '__main__':
 
     def main():
@@ -116,18 +132,22 @@ if __name__ == '__main__':
         DEVICE_NAME = "r1"
         COMMAND = "show ip int brief"
 
+        # キャッシュからトークンを取り出して、有効期限を確認する
+        token, timestamp = load_token()
+        if token is None or (time.time() - timestamp) > 3600:
+            # トークンが存在しない、もしくは有効期限切れの場合は再取得する
+            with Client.create() as client:
+                connect_data = client.oauth_connect_only(CLIENT_ID, domain=DOMAIN)
+
+                ws = create_connection(str(connect_data.token_url))
+                webbrowser.open(str(connect_data.sso_url))
+                token = json.loads(ws.recv())['access_token']
+                save_token(token)
+                # print('Token:', token)
+                # このトークンは1時間有効なので、保存して再利用する
+
         with Client.create() as client:
 
-            connect_data = client.oauth_connect_only(CLIENT_ID, domain=DOMAIN)
-
-            ws = create_connection(str(connect_data.token_url))
-            webbrowser.open(str(connect_data.sso_url))
-            token = json.loads(ws.recv())['access_token']
-
-
-            # print('Token:', token)
-
-            # このトークンは1時間有効なので、保存しておいて再利用することもできる
             token_client = client.access_token_login(token, domain=DOMAIN)
 
             service = token_client.service(SERVICE_ID).wait()
@@ -137,9 +157,8 @@ if __name__ == '__main__':
 
             device = service.inventory[DEVICE_NAME]
 
-            request = device.exec(COMMAND)
-            result = request.wait()
-            print(result.result.data)
+            single_result = device.exec(COMMAND).wait()
+            print(single_result.result.data)
 
         return 0
 
