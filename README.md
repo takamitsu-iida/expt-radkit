@@ -597,7 +597,7 @@ Untouched inventory from service 1ryq-e8n8-5g5n.
 
 r1という装置が見えます。
 
-`service.inventory` はPythonの辞書型データなので、r1という装置を取り出します。
+`service.inventory` から r1 という名前の装置を取り出します。
 
 ```bash
 >>> device = service.inventory['r1']
@@ -746,8 +746,10 @@ unset PS1
 >
 > WSLで実行する場合は追加で以下も.envrcに入れておくと、無用な警告がでるのを回避できます。
 >
+> ```
 > # Set the default browser to wslview
 > export BROWSER=/usr/bin/wslview
+> ```
 
 <br>
 
