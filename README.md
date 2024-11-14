@@ -817,3 +817,7 @@ GigabitEthernet8       unassigned      YES NVRAM  administratively down down
 R1#
 (.venv) iida@FCCLS0073460:~/git/expt-radkit$
 ```
+
+マニュアルを読むと、もっと便利に使えそうな感じです。
+
+https://radkit.cisco.com/docs/client_api/client_api.html#
