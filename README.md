@@ -430,6 +430,9 @@ $ radkit-interactive --domain PROD --service-sn 1ryq-e8n8-5g5n --sso-email iida@
 
 装置への接続は実際にはRADKit serviceが行なっていますので、装置のパスワードを知らなくてもログインできますし、enableパスワードを知らなくてもenable状態になっています。
 
+使い込んでいくと、装置に接続するたびにSSOのリンクを踏むのが面倒と感じるようになります。
+証明書を使って認証すると楽になります（後述）。
+
 <br>
 
 ### radkit-network-console
@@ -478,6 +481,16 @@ Available actions:
     quit
     !
 ```
+
+<br>
+
+> [!NOTE]
+>
+> なぜか証明書でログインするオプションがありません・・・
+>
+> なんで？？？
+
+<br>
 
 `login iida@fujitsu.com` でログインします。
 
@@ -753,7 +766,6 @@ unset PS1
 
 <br>
 
-
 あとはマニュアル通りに実行します。
 
 https://radkit.cisco.com/docs/install/install_pip.html#install-pip
@@ -799,7 +811,7 @@ bin/radkit_ex1.py
 実行例。
 
 ```bash
-(.venv) iida@FCCLS0073460:~/git/expt-radkit$ bin/radkit_ex1.py
+(.venv) $ bin/radkit_ex1.py
 ServiceStatus.READY
 [READY] <radkit_client.sync.device.DeviceDict object at 0x7f9690823bb0>
 name    host             device_type    Terminal    Netconf    SNMP    Swagger    HTTP    description    failed
@@ -818,7 +830,7 @@ GigabitEthernet6       unassigned      YES NVRAM  administratively down down
 GigabitEthernet7       unassigned      YES NVRAM  administratively down down
 GigabitEthernet8       unassigned      YES NVRAM  administratively down down
 R1#
-(.venv) iida@FCCLS0073460:~/git/expt-radkit$
+(.venv) $
 ```
 
 マニュアルを読むと、もっと便利に使えそうな感じです。
@@ -853,7 +865,7 @@ with Client.create() as client:
 実行例。
 
 ```bash
-(.venv) iida@FCCLS0073460:~/git/expt-radkit$ bin/radkit_ex2.py
+(.venv) $ bin/radkit_ex2.py
 {
   "interface": {
     "GigabitEthernet1": {
@@ -928,3 +940,121 @@ with Client.create() as client:
 ```
 
 よく見ると "R1#" というインタフェースが入ってますが、これはプロンプト部分がテキスト出力に入ってしまってるからですね。
+
+<br>
+
+## 証明書で認証する
+
+SSOで認証するとブラウザの操作が必要になって少々煩わしいです。
+
+事前にRADKit serviceとの間で証明書を交わしておくと、秘密鍵の入力だけですみます。
+
+radkit-clientでサービスに接続してから `client.enroll_client()` を実行します。
+
+秘密鍵を入れろ、と言われるので入力します。
+
+実行例。
+
+```bash
+$ radkit-client
+
+>>> sso_login("iida@fujitsu.com")
+
+[CONNECTED] Client(status='CONNECTED')
+------------------  ---------------------------------------
+default_domain      PROD
+default_connection  domain=PROD; client_id=iida@fujitsu.com
+connected_domains   PROD
+services            not connected to any service
+running_proxies     no local proxy running
+------------------  ---------------------------------------
+
+>>> service = client.service("1ryq-e8n8-5g5n")
+
+>>> client.enroll_client(client_id="iida@fujitsu.com")
+New private key password: *****
+Your password must contain: at least: 8 chars, 1 lowercase letter(s), 1 uppercase letter(s), 1 digit(s) and 0 symbol(s)
+New private key password: ********
+Confirm: ********
+00:33:29.430Z WARNI | The private key is a very sensitive piece of information. DO NOT SHARE UNDER ANY CIRCUMSTANCES, and use a very strong passphrase. Please consult the documentation for more details.
+<frozen radkit_client.async_.client>:824: UserWarning: The private key is a very sensitive piece of information. DO NOT SHARE UNDER ANY CIRCUMSTANCES, and use a very strong passphrase. Please consult the documentation for more details.
+```
+
+これで証明書を使ってログインする準備は完了です。
+
+radkit-interactiveの場合は引数に `--cert-identity` を付けると証明書を使った認証になります。
+
+```bash
+$ radkit-interactive --domain PROD --service-sn 1ryq-e8n8-5g5n --cert-identity iida@fujitsu.com --device r1
+```
+
+実行例。
+
+```bash
+$ radkit-interactive --domain PROD --service-sn 1ryq-e8n8-5g5n --cert-identity iida@fujitsu.com --device r1
+Private key password: ********
+
+   Attaching to  r1  ...
+     Type:  ~.  to terminate.
+            ~?  for other shortcuts.
+   When using nested SSH sessions, add an extra  ~  per level of nesting.
+
+Warning: all sessions are logged. Never type passwords or other secrets, except at an echo-less password prompt.
+
+R1#
+R1#
+```
+<br>
+
+秘密鍵の入力も煩わしい、という場合には環境変数 `RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64` にbase64でエンコードした秘密鍵を設定すればそれが使われます。
+
+マニュアルに記載の例を引用しておきます。
+
+```bash
+% export RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64="$( echo -n 'MyPassW0rd' | base64 )"
+% radkit-client
+>>> certificate_login("myuserid@cisco.com")
+>>>
+```
+
+実際に試してみるとわかりますが、環境変数を設定するとパスワードの入力なしでログインできます。
+
+Pythonスクリプトの場合もインタラクティブな認証動作が介入すると煩わしいので証明書で認証した方がいいでしょう。
+
+スクリプトはこんな感じでシンプルになります。
+環境変数 `RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64` が設定されていればパスワードの入力は必要ありません。
+設定されてなければ入力を促されます。
+
+```python
+if __name__ == '__main__':
+
+    def main():
+
+        DOMAIN = "PROD"
+        CLIENT_ID = "iida@fujitsu.com"
+        SERVICE_ID = "1ryq-e8n8-5g5n"
+
+        DEVICE_NAME = "r1"
+        COMMAND = "show ip int brief"
+
+        with Client.create() as client:
+            client.certificate_login(
+                identity=CLIENT_ID,
+                domain=DOMAIN
+            )
+
+            service = client.service(SERVICE_ID).wait()
+
+            #print(service.status)
+            #print(service.inventory)
+
+            single_response = service.inventory[DEVICE_NAME].exec(COMMAND).wait()
+            parsed_result = radkit_genie.parse(single_response)
+            json_result = parsed_result[DEVICE_NAME][COMMAND].data
+            print(json.dumps(json_result, indent=2))
+
+        return 0
+
+    # 実行
+    sys.exit(main())
+```
