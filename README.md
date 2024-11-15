@@ -1058,3 +1058,123 @@ if __name__ == '__main__':
     # 実行
     sys.exit(main())
 ```
+
+<br>
+
+## もっと便利に使うには
+
+昔ながらのrloginみたいに、ログインしたい装置の名前を実行するだけですむようにできます。
+
+最初に `~/radkit_hosts` ディレクトリを作ります（ディレクトリ名は適当で構いません）。
+
+```bash
+mkdir ~/radkit_hosts
+```
+
+自分以外は見えないようにします。
+
+```bash
+chmod 0700 ~/radkit_hosts
+```
+
+このディレクトリをPATHに通すために `~/.bashrc` に下記を追加します。
+
+```bash
+export PATH="$HOME/radkit_hosts:$PATH"
+```
+
+環境変数を設定するファイル `~/radkit_hosts/.radkitrc` を作ります。
+
+中身はこんな感じ。
+
+YOUR_PASSWORDのところに秘密鍵を生で書きます。
+
+```bash
+export RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64="$( echo -n 'YOUR_PASSWORD' | base64)"
+export RADKIT_SERVICE_SN="1ryq-e8n8-5g5n"
+export RADKIT_CERT_IDENTITY="iida@fujitsu.com"
+```
+
+あとは装置ごとにシェルスクリプトを書くだけです。
+
+r1という名前で下記のシェルスクリプトを作成します。
+
+```bash
+#!/bin/bash
+
+TARGET=$(basename "$0")
+SCRIPT_DIR=$(dirname "$0")
+
+RADKITRC=$SCRIPT_DIR/.radkitrc
+
+if [ -f "$RADKITRC" ]; then
+    if [ -n "$RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64" ]; then
+        RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64_BACKUP=$RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64
+    fi
+    source $RADKITRC
+else
+    echo "$RADKITRC ファイルが見つかりません。"
+    exit 1
+fi
+
+if [ -z "$RADKIT_SERVICE_SN" ]; then
+    echo "RADKIT_SERVICE_SNが設定されていません。"
+    if [ -n "$RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64_BACKUP" ]; then
+        export RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64=$RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64_BACKUP
+    fi
+    exit 1
+fi
+
+if [ -z "$RADKIT_CERT_IDENTITY" ]; then
+    echo "RADKIT_CERT_IDENTITYが設定されていません。"
+    if [ -n "$RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64_BACKUP" ]; then
+        export RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64=$RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64_BACKUP
+    fi
+    exit 1
+fi
+
+radkit-interactive --domain PROD --service-sn $RADKIT_SERVICE_SN --cert-identity $RADKIT_CERT_IDENTITY  --device $TARGET
+
+export -n RADKIT_SERVICE_SN
+export -n RADKIT_CERT_IDENTITY
+if [ -n "$RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64_BACKUP" ]; then
+    export RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64=$RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64_BACKUP
+else
+    export -n RADKIT_CLIENT_PRIVATE_KEY_PASSWORD_BASE64
+fi
+```
+
+実行できるようにモードを変更します。
+
+```bash
+chmod a+x ~/radkit_hosrts/r1
+```
+
+実行例。
+
+```bash
+$ r1
+
+   Attaching to  r1  ...
+     Type:  ~.  to terminate.
+            ~?  for other shortcuts.
+   When using nested SSH sessions, add an extra  ~  per level of nesting.
+
+Warning: all sessions are logged. Never type passwords or other secrets, except at an echo-less password prompt.
+
+
+R1#show ver
+Cisco IOS XE Software, Version 17.03.08a
+Cisco IOS Software [Amsterdam], Virtual XE Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version 17.3.8a, RELEASE SOFTWARE (fc3)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2023 by Cisco Systems, Inc.
+Compiled Fri 20-Oct-23 15:48 by mcpre
+
+
+R1#exit
+
+$
+```
+
+このスクリプトには装置固有の情報は入っていませんので、
+ログインしたい装置が複数あるときはその装置名になるようにファイルをコピーするだけです。
