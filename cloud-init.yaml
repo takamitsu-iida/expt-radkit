@@ -1,0 +1,77 @@
+#cloud-config
+hostname: radkit
+manage_etc_hosts: True
+system_info:
+  default_user:
+    name: root
+password: cisco
+chpasswd: { expire: False }
+ssh_pwauth: True
+ssh_authorized_keys:
+  - your-ssh-pubkey-line-goes-here
+
+timezone: Asia/Tokyo
+
+locale: ja_JP.utf8
+
+# run apt-get update
+# default false
+package_update: true
+
+# default false
+package_upgrade: true
+
+# reboot if required
+package_reboot_if_required: true
+
+# packages
+packages:
+  - git
+
+write_files:
+  - path: /etc/netplan/50-cloud-init.yaml
+    content: |
+      network:
+        ethernets:
+          ens2:
+            dhcp4: true
+            #nameservers:
+            #  addresses:
+            #    - 192.168.122.1
+
+          ens3:
+            dhcp4: false
+            addresses:
+              - 192.168.0.1/24
+            #gateway4: 192.168.254.1
+
+          ens4:
+            dhcp4: false
+            addresses:
+              - 192.168.254.1/24
+            #routes:
+            #  - to: 10.0.0.0/8
+            #    via: 192.168.254.101
+
+        version: 2
+
+runcmd:
+  - sudo netplan apply
+
+  - sudo ufw allow 8081/tcp
+
+  - sudo ufw allow 8181/tcp
+
+  - |
+    sudo cat - << 'EOS' >> /root/.bashrc
+    rsz () if [[ -t 0 ]]; then local escape r c prompt=$(printf '\e7\e[r\e[999;999H\e[6n\e8'); IFS='[;' read -sd R -p j"$prompt" escape r c; stty cols $c rows $r; fi
+    rsz
+    EOS
+
+  - |
+    sudo cat - << 'EOS' >> /root/.bashrc
+    RADKIT_ROOT="/opt/radkit/bin"
+    export PATH=$RADKIT_ROOT:$PATH
+    EOS
+
+  # - wget -P /tmp 192.168.122.198/cisco_radkit_1.7.4_linux_x86_64.sh
