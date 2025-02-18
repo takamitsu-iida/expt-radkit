@@ -58,7 +58,9 @@ https://radkit.cisco.com/
 
 > [!NOTE]
 >
-> 2024年11月時点での最新 cisco_radkit_1.7.4_linux_x86_64.sh をダウンロードしました。
+> ~~2024年11月時点での最新 cisco_radkit_1.7.4_linux_x86_64.sh をダウンロードしました。~~
+>
+> 2025年1月時点での最新 cisco_radkit_1.7.6_linux_x86_64.sh をダウンロードしました。
 
 <br>
 
@@ -89,9 +91,9 @@ RADKit serviceは同時にCMLのラボ機器とも接続します。それ用の
 
 となります。
 
-UbuntuのTagsには `serial:50000` と設定して5000番ポートでシリアルコンソール接続できるようにします。
+UbuntuのTagsには `serial:5000` と設定して5000番ポートでシリアルコンソール接続できるようにします。
 
-Ubuntuに以下のYAMLをCONFIGにコピペします。
+UbuntuのConfigに以下のYAMLをCONFIGにコピペします。
 
 ```yaml
 #cloud-config
@@ -1190,12 +1192,22 @@ Pythonのライブラリ `virl2_client` を使うとCML内のラボをスクリ�
 > virl2_clientのバージョンはCMLのバージョンと一致させないと、CMLのバージョン差異による非互換が出てしまうので注意が必要。
 
 ```bash
-pip install virl2_client==2.7
+pip install virl2_client==2.8
 ```
 
 `bin/cml_create_lab.py` を実行すれば一瞬でラボを作れる。
-ラボ定義ファイル `RADKit.yaml` をインポートするのと同等のことをvirl2_clientを使って実行している。
+
+このpythonスクリプトでは、ラボ定義ファイル `RADKit.yaml` をインポートするのと同等のことをvirl2_clientを使って実行している。
 
 Ubuntuを起動して、RADKitのインストールから始めればよい。
 
-RADKitのインストーラを自由にダウンロードできるなら、ダウンロードしてインストールするところまで完全に自動化できるのだが・・・
+RADKitのインストーラを（Ciscoのアカウントなしに）自由にダウンロードできるなら、
+ダウンロードしてインストールするところまで完全に自動化できるのだが・・・
+
+RADKitのインストーラだけは事前にダウンロードして、仮想マシンからダウンロードできる場所においておく必要がある。
+
+radkitの仮想マシンにログインして、以下を実行することで、このリポジトリにおいたシェルスクリプトを実行できる。
+
+```bash
+curl -sf https://raw.githubusercontent.com/takamitsu-iida/expt-radkit/refs/heads/main/bin/install_radkit.sh | /bin/bash -s
+```

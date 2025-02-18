@@ -224,7 +224,7 @@ if __name__ == '__main__':
 
         create_text_annotation(lab, {
             'color': '#808080FF',
-            'text_content': 'radkit serial:5001\nR1 serial:5002',
+            'text_content': 'radkit serial:5000\nR1 serial:5001',
             'x1': -480.0,
             'y1': -160.0,
             'z_index': 8
@@ -275,7 +275,7 @@ if __name__ == '__main__':
         ubuntu_node = create_ubuntu(lab, node_name, -200, -80)
 
         # タグを設定
-        ubuntu_node.add_tag(tag="serial:5001")
+        ubuntu_node.add_tag(tag="serial:5000")
 
         # ノードのconfigを設定する
         # Ubuntuに設定するcloud-init.yamlを取り出す
@@ -298,7 +298,7 @@ if __name__ == '__main__':
         csr1000v = lab.create_node("R1", "csr1000v", -200, 200)
 
         # タグを設定する
-        csr1000v.add_tag("serial:5002")
+        csr1000v.add_tag("serial:5001")
 
         # CSR1000vとアンマネージドスイッチを接続する
         lab.connect_two_nodes(csr1000v, unmanaged_switch_node)
