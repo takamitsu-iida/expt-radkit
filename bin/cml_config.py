@@ -9,4 +9,4 @@ CML_USERNAME = "admin"
 CML_PASSWORD = "Cisco123"
 
 # Labのタイトル
-LAB_TITLE = "TEST_RADKIT"
+LAB_TITLE = "RADKIT"

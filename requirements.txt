@@ -1,4 +1,4 @@
 websocket-client
 
 # バージョンはCMLにあわせること！
-virl2-client==2.7
+virl2-client==2.8

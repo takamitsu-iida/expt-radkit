@@ -169,6 +169,11 @@ if __name__ == '__main__':
         # ラボを新規作成
         lab = client.create_lab(title=LAB_TITLE)
 
+        #
+        # ラボ定義ファイルの内容に沿って作成していく
+        #
+
+        # テキスト
         create_text_annotation(lab, {
             'color': '#050505',
             'text_content': 'インターネット',
@@ -217,7 +222,15 @@ if __name__ == '__main__':
             'z_index': 7
         })
 
+        create_text_annotation(lab, {
+            'color': '#808080FF',
+            'text_content': 'radkit serial:5001\nR1 serial:5002',
+            'x1': -480.0,
+            'y1': -160.0,
+            'z_index': 8
+        })
 
+        # 円
         lab.create_annotation(annotation_type='ellipse', **{
             'border_color': '#808080FF',
             'border_style': '',
@@ -230,6 +243,7 @@ if __name__ == '__main__':
             'z_index': 0
         })
 
+        # 四角形
         lab.create_annotation(annotation_type='rectangle', **{
             'border_color': '#808080FF',
             'border_radius': 0,

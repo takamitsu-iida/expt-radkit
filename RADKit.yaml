@@ -1,14 +1,4 @@
 annotations:
-  - border_color: '#808080FF'
-    border_style: ''
-    color: '#A39FE9'
-    thickness: 1
-    type: ellipse
-    x1: -193.5
-    y1: -272.5
-    x2: 82.5
-    y2: 68.5
-    z_index: 0
   - border_color: '#00000000'
     border_style: ''
     color: '#050505'
@@ -24,17 +14,6 @@ annotations:
     x1: -247.0
     y1: -299.0
     z_index: 1
-  - border_color: '#808080FF'
-    border_radius: 0
-    border_style: ''
-    color: '#BBFDBF'
-    thickness: 1
-    type: rectangle
-    x1: -11.0
-    y1: -117.0
-    x2: 211.0
-    y2: 94.0
-    z_index: 2
   - border_color: '#00000000'
     border_style: ''
     color: '#808080FF'
@@ -42,7 +21,7 @@ annotations:
     text_bold: false
     text_content: |-
       Hyper-Vホスト
-      192.168.0.198
+       192.168.0.198
     text_font: monospace
     text_italic: false
     text_size: 12
@@ -74,8 +53,8 @@ annotations:
     text_bold: false
     text_content: |-
       RADKit接続
-      https://192.168.0.1:8081
-      (superadmin)
+       https://192.168.0.1:8081
+       (superadmin)
     text_font: monospace
     text_italic: false
     text_size: 12
@@ -115,6 +94,73 @@ annotations:
     x1: -187.0
     y1: 172.0
     z_index: 7
+  - border_color: '#808080FF'
+    border_style: ''
+    color: '#A39FE9'
+    rotation: 0
+    thickness: 1
+    type: ellipse
+    x1: -193.5
+    y1: -272.5
+    x2: 82.5
+    y2: 68.5
+    z_index: 0
+  - border_color: '#808080FF'
+    border_radius: 0
+    border_style: ''
+    color: '#BBFDBF'
+    rotation: 0
+    thickness: 1
+    type: rectangle
+    x1: -11.0
+    y1: -117.0
+    x2: 211.0
+    y2: 94.0
+    z_index: 2
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: |-
+      radkit serial:5001
+      R1 serial:5002
+    text_font: monospace
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -480.0
+    y1: -160.0
+    z_index: 8
+smart_annotations:
+  - tag: serial:5001
+    is_on: true
+    padding: 35
+    label: serial:5001
+    tag_offset_x: 0
+    tag_offset_y: 0
+    tag_size: 14
+    group_distance: 400
+    thickness: 1
+    border_style: ''
+    fill_color: '#F8A30080'
+    border_color: '#00000080'
+    z_index: 1
+  - tag: serial:5002
+    is_on: true
+    padding: 35
+    label: serial:5002
+    tag_offset_x: 0
+    tag_offset_y: 0
+    tag_size: 14
+    group_distance: 400
+    thickness: 1
+    border_style: ''
+    fill_color: '#007A3380'
+    border_color: '#00000080'
+    z_index: 2
 nodes:
   - boot_disk_size: null
     configuration:
@@ -136,6 +182,30 @@ nodes:
     interfaces:
       - id: i0
         label: port
+        mac_address: null
+        slot: 0
+        type: physical
+  - boot_disk_size: null
+    configuration:
+      - name: default
+        content: bridge1
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n1
+    image_definition: null
+    label: bridge1
+    node_definition: external_connector
+    parameters: {}
+    ram: null
+    tags: []
+    x: 0
+    y: -80
+    interfaces:
+      - id: i0
+        label: port
+        mac_address: null
         slot: 0
         type: physical
   - boot_disk_size: null
@@ -153,8 +223,25 @@ nodes:
           ssh_pwauth: True
           ssh_authorized_keys:
             - your-ssh-pubkey-line-goes-here
+
           timezone: Asia/Tokyo
+
           locale: ja_JP.utf8
+
+          # run apt-get update
+          # default false
+          package_update: true
+
+          # default false
+          package_upgrade: true
+
+          # reboot if required
+          package_reboot_if_required: true
+
+          # packages
+          packages:
+            - git
+
           write_files:
             - path: /etc/netplan/50-cloud-init.yaml
               content: |
@@ -206,58 +293,56 @@ nodes:
     cpus: null
     data_volume: null
     hide_links: false
-    id: n1
+    id: n2
     image_definition: null
     label: radkit
     node_definition: ubuntu
     parameters: {}
     ram: null
     tags:
-      - serial:5000
+      - serial:5001
     x: -200
     y: -80
     interfaces:
       - id: i0
         label: ens2
+        mac_address: null
         slot: 0
         type: physical
       - id: i1
         label: ens3
+        mac_address: null
         slot: 1
         type: physical
       - id: i2
         label: ens4
+        mac_address: null
         slot: 2
         type: physical
       - id: i3
         label: ens5
+        mac_address: null
         slot: 3
         type: physical
       - id: i4
         label: ens6
+        mac_address: null
         slot: 4
         type: physical
-  - boot_disk_size: null
-    configuration:
-      - name: default
-        content: bridge1
-    cpu_limit: null
-    cpus: null
-    data_volume: null
-    hide_links: false
-    id: n2
-    image_definition: null
-    label: bridge1
-    node_definition: external_connector
-    parameters: {}
-    ram: null
-    tags: []
-    x: 0
-    y: -80
-    interfaces:
-      - id: i0
-        label: port
-        slot: 0
+      - id: i5
+        label: ens7
+        mac_address: null
+        slot: 5
+        type: physical
+      - id: i6
+        label: ens8
+        mac_address: null
+        slot: 6
+        type: physical
+      - id: i7
+        label: ens9
+        mac_address: null
+        slot: 7
         type: physical
   - boot_disk_size: null
     configuration: []
@@ -277,35 +362,13 @@ nodes:
     interfaces:
       - id: i0
         label: port0
+        mac_address: null
         slot: 0
         type: physical
       - id: i1
         label: port1
+        mac_address: null
         slot: 1
-        type: physical
-      - id: i2
-        label: port2
-        slot: 2
-        type: physical
-      - id: i3
-        label: port3
-        slot: 3
-        type: physical
-      - id: i4
-        label: port4
-        slot: 4
-        type: physical
-      - id: i5
-        label: port5
-        slot: 5
-        type: physical
-      - id: i6
-        label: port6
-        slot: 6
-        type: physical
-      - id: i7
-        label: port7
-        slot: 7
         type: physical
   - boot_disk_size: null
     configuration: []
@@ -320,62 +383,36 @@ nodes:
     parameters: {}
     ram: null
     tags:
-      - serial:5001
+      - serial:5002
     x: -200
     y: 200
     interfaces:
       - id: i0
         label: Loopback0
+        mac_address: null
         type: loopback
       - id: i1
         label: GigabitEthernet1
+        mac_address: null
         slot: 0
-        type: physical
-      - id: i2
-        label: GigabitEthernet2
-        slot: 1
-        type: physical
-      - id: i3
-        label: GigabitEthernet3
-        slot: 2
-        type: physical
-      - id: i4
-        label: GigabitEthernet4
-        slot: 3
-        type: physical
-      - id: i5
-        label: GigabitEthernet5
-        slot: 4
-        type: physical
-      - id: i6
-        label: GigabitEthernet6
-        slot: 5
-        type: physical
-      - id: i7
-        label: GigabitEthernet7
-        slot: 6
-        type: physical
-      - id: i8
-        label: GigabitEthernet8
-        slot: 7
         type: physical
 links:
   - id: l0
-    n1: n0
-    n2: n1
+    n1: n2
+    n2: n0
     i1: i0
     i2: i0
     conditioning: {}
-    label: ext-conn-0-port<->ubuntu-0-ens2
+    label: radkit-ens2<->NAT-port
   - id: l1
     n1: n2
     n2: n1
-    i1: i0
-    i2: i1
+    i1: i1
+    i2: i0
     conditioning: {}
-    label: ext-conn-1-port<->radkit-ens3
+    label: radkit-ens3<->bridge1-port
   - id: l2
-    n1: n1
+    n1: n2
     n2: n3
     i1: i2
     i2: i0
@@ -391,5 +428,5 @@ links:
 lab:
   description: ''
   notes: ''
-  title: RADKit
-  version: 0.2.2
+  title: RADKIT
+  version: 0.3.0
