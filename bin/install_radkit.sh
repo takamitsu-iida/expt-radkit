@@ -5,7 +5,7 @@
 
 SCRIPT_FILENAME=cisco_radkit_1.7.6_linux_x86_64.sh
 
-SCRIPT_PATH=http://192.168.122.198/${SCRIPT_FILENAME}
+SCRIPT_PATH=http://192.168.0.198/${SCRIPT_FILENAME}
 
 echo "download RADKit install script to /tmp"
 wget -P /tmp ${SCRIPT_PATH}
