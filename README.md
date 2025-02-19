@@ -1187,27 +1187,68 @@ $
 
 Pythonのライブラリ `virl2_client` を使うとCML内のラボをスクリプトで作成できる。
 
-> NOTE:
+> [!NOTE]
 >
 > virl2_clientのバージョンはCMLのバージョンと一致させないと、CMLのバージョン差異による非互換が出てしまうので注意が必要。
+> 特に2.7と2.8はバージョン差異が大きいので要注意。
 
 ```bash
 pip install virl2_client==2.8
 ```
 
+CMLに接続するためのIPアドレスやアカウント情報を `bin/cml_config.py` に埋め込んでいる。
+
 `bin/cml_create_lab.py` を実行すれば一瞬でラボを作れる。
 
 このpythonスクリプトでは、ラボ定義ファイル `RADKit.yaml` をインポートするのと同等のことをvirl2_clientを使って実行している。
 
-Ubuntuを起動して、RADKitのインストールから始めればよい。
-
 RADKitのインストーラを（Ciscoのアカウントなしに）自由にダウンロードできるなら、
 ダウンロードしてインストールするところまで完全に自動化できるのだが・・・
 
-RADKitのインストーラだけは事前にダウンロードして、仮想マシンからダウンロードできる場所においておく必要がある。
+Ubuntuを起動して、RADKitのインストールを手動で行う。
 
-radkitの仮想マシンにログインして、以下を実行することで、このリポジトリにおいたシェルスクリプトを実行できる。
+RADKitのインストーラを事前にダウンロードして、仮想マシンからダウンロードできる場所においておく。
+Hyper-Vを実行しているWindows母艦のIISのルートでよい。
+
+radkitの仮想マシンにrootでログインして以下を実行することで、このリポジトリにおいたシェルスクリプトが実行され、RADkitのインストールは完了する。
 
 ```bash
 curl -sf https://raw.githubusercontent.com/takamitsu-iida/expt-radkit/refs/heads/main/bin/install_radkit.sh | /bin/bash -s
 ```
+
+このシェルスクリプトの中身はこうなっている。
+
+```bash
+#!/bin/bash
+
+# 実行方法
+# curl -sf https://raw.githubusercontent.com/takamitsu-iida/expt-radkit/refs/heads/main/bin/install_radkit.sh | /bin/bash -s
+
+RADKIT_VERSION="1.7.6"
+
+SCRIPT_FILENAME="cisco_radkit_${RADKIT_VERSION}_linux_x86_64.sh"
+
+SCRIPT_PATH="http://192.168.0.198/${SCRIPT_FILENAME}"
+
+
+if [ ! -e /tmp/${SCRIPT_FILENAME} ]; then
+    # /tmpにまだファイルがなければダウンロードする
+    echo "download RADKit install script to /tmp"
+
+    # wgetでファイルを取得して/tmpに保存する
+    wget -P /tmp ${SCRIPT_PATH}
+
+    if [ ! -e /tmp/${SCRIPT_FILENAME} ]; then
+        echo "download failed"
+        exit 1
+    fi
+fi
+
+# 実行する
+/bin/sh /tmp/${SCRIPT_FILENAME} -- --accept-all --systemd
+
+# ポストインストールを実行する
+/bin/sh /opt/radkit/versions/${RADKIT_VERSION}/post-install.sh
+```
+
+/opt/radkit/binをPATHに通す必要があるが、Ubuntu作成時にcloud-initの中ですでに作成しているので省略してよい。
