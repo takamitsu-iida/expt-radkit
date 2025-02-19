@@ -2,9 +2,12 @@
 # https://github.com/github/gitignore
 
 *.tgz
-wheels_dir
+cisco*.sh
 
+wheels_dir/
+radkit/
 log/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

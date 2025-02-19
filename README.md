@@ -369,13 +369,43 @@ sh cisco_radkit_1.7.6_linux_x86_64.sh
 
 customを選択します。
 
-~/.bashrcに以下を追加してPATHを通します。
+デフォルトでは `~/.local/radkit/` にRADKitクライアントはインストールされます。
+
+ですが、このあとPythonスクリプトで操作することを考慮すると、venvの影響範囲内に限定してインストールした方が良さそうです。
+
+ここではこのリポジトリの場所である `/home/iida/git/expt-radkit/radkit` に変更しておきます。
 
 ```bash
-## RADKit
-RADKIT_ROOT="$HOME/.local/radkit"
+Please specify the installation path (/home/iida/.local/radkit): /home/iida/git/expt-radkit/radkit
+```
+
+.envrcに以下を追加して、このディレクトリに入ったときにだけ、PATHが通るようにします。
+
+```bash
+# RADKit
+export RADKIT_ROOT="$HOME/git/expt-radkit/radkit"
 export PATH="$RADKIT_ROOT/bin:$PATH"
 ```
+
+インストールできたか、確認します。
+
+```bash
+iida@FCCLS0073460:~/git/expt-radkit$ which radkit-client
+/home/iida/git/expt-radkit/radkit/bin/radkit-client
+```
+
+インストールされています。
+
+一つ上のディレクトリに行くと、direnvによって環境変数が消されてPATHが通らなくなります。
+
+```bash
+iida@FCCLS0073460:~/git/expt-radkit$ cd ..
+direnv: unloading
+iida@FCCLS0073460:~/git$ which radkit-client
+iida@FCCLS0073460:~/git$
+```
+
+このリポジトリのディレクトリの中にいるときだけ、RADKitクライアントを利用できます。
 
 <br>
 
@@ -386,10 +416,10 @@ export PATH="$RADKIT_ROOT/bin:$PATH"
 インストールしたときに削除方法が表示されていますので、それに従ってuninstallを走らせます。
 
 ```bash
-┌─ WARNING ────────────────────────────────────────────────────────────┐
-│ Make sure that /home/iida/.local/radkit/bin is in your PATH.         │
-│ To uninstall, run: /home/iida/.local/radkit/versions/1.7.6/uninstall │
-└──────────────────────────────────────────────────────────────────────┘
+┌─ WARNING ─────────────────────────────────────────────────────────────────────┐
+│ Make sure that /home/iida/git/expt-radkit/radkit/bin is in your PATH.         │
+│ To uninstall, run: /home/iida/git/expt-radkit/radkit/versions/1.7.6/uninstall │
+└───────────────────────────────────────────────────────────────────────────────┘
 ```
 
 <br>
@@ -745,7 +775,7 @@ https://radkit.cisco.com/downloads/release/
 個別環境を作ります。
 
 ```bash
-python3 -m venv .venv
+python -m venv .venv
 ```
 
 direnvを導入済みなら `.envrc` に以下の内容を記載して `direnv allow` します。
