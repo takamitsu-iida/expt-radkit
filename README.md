@@ -64,7 +64,7 @@ https://radkit.cisco.com/
 
 <br>
 
-これをIISのルートにコピーしておきます。
+これをIISのルート(inetpub/wwwroot)にコピーしておきます。
 
 <br>
 
@@ -154,9 +154,6 @@ runcmd:
     RADKIT_ROOT="/opt/radkit/bin"
     export PATH=$RADKIT_ROOT:$PATH
     EOS
-
-  # - wget -P /tmp 192.168.122.198/cisco_radkit_1.7.4_linux_x86_64.sh
-
 ```
 
 <br>
@@ -177,16 +174,16 @@ rootでログインします。
 
 wgetでインストーラをダウンロードします。
 
-ここでは母艦のWindows11（192.168.122.198）のIISのサーバルートに置いたファイルをダウンロードしています。
+ここでは母艦のWindows11（192.168.122.198）のIISのルート(inetpub/wwwroot)に置いたファイルをダウンロードしています。
 
 ```bash
-wget -P /tmp 192.168.122.198/cisco_radkit_1.7.4_linux_x86_64.sh
+wget -P /tmp 192.168.122.198/cisco_radkit_1.7.6_linux_x86_64.sh
 ```
 
 インストールします。
 
 ```bash
-sh /tmp/cisco_radkit_1.7.4_linux_x86_64.sh
+sh /tmp/cisco_radkit_1.7.6_linux_x86_64.sh
 ```
 
 システムにインストールするか、ユーザ個別にインストールするか聞かれるので、`system` を選びます。
@@ -225,15 +222,15 @@ mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj
 
 lq WARNING qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqk
 x Post installation instructions have been written into                        x
-x /opt/radkit/versions/1.7.4/post-install.sh.                                  x
+x /opt/radkit/versions/1.7.6/post-install.sh.                                  x
 x Please adjust the script to your site policies and run when ready using the  x
-x command: sh /opt/radkit/versions/1.7.4/post-install.sh                       x
+x command: sh /opt/radkit/versions/1.7.6/post-install.sh                       x
 mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj
 
 
 lq WARNING qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqk
 x Make sure that /opt/radkit/bin is in your PATH.         x
-x To uninstall, run: /opt/radkit/versions/1.7.4/uninstall x
+x To uninstall, run: /opt/radkit/versions/1.7.6/uninstall x
 mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj
 
 ```
@@ -241,7 +238,7 @@ mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj
 これら注意喚起メッセージに素直に従って、次のスクリプトを実行します。
 
 ```bash
-sh /opt/radkit/versions/1.7.4/post-install.sh
+sh /opt/radkit/versions/1.7.6/post-install.sh
 ```
 
 サービスの起動状況を確認します。
@@ -262,7 +259,7 @@ root@radkit:~# systemctl status radkit
      Memory: 293.2M
         CPU: 3.084s
      CGroup: /system.slice/radkit.service
-             mq576 /opt/radkit/versions/1.7.4/python/bin/python3 /opt/radkit/bi>
+             mq576 /opt/radkit/versions/1.7.6/python/bin/python3 /opt/radkit/bi>
 ```
 
 Ubuntuに割りあてられているIPアドレスを確認します。
@@ -367,7 +364,7 @@ RADKitクライアントはインターネットに接続できる端末であ�
 ここではWindows10のWSL(Ubuntu20.04)に入れます。
 
 ```bash
-sh cisco_radkit_1.7.4_linux_x86_64.sh
+sh cisco_radkit_1.7.6_linux_x86_64.sh
 ```
 
 customを選択します。
@@ -391,7 +388,7 @@ export PATH="$RADKIT_ROOT/bin:$PATH"
 ```bash
 ┌─ WARNING ────────────────────────────────────────────────────────────┐
 │ Make sure that /home/iida/.local/radkit/bin is in your PATH.         │
-│ To uninstall, run: /home/iida/.local/radkit/versions/1.7.4/uninstall │
+│ To uninstall, run: /home/iida/.local/radkit/versions/1.7.6/uninstall │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -735,7 +732,10 @@ https://radkit.cisco.com/downloads/release/
 
 > [!NOTE]
 >
-> 2024年11月時点での最新 cisco_radkit_1.7.4_pip_linux_x86.tgz をダウンロードしました。
+> ~~2024年11月時点での最新 cisco_radkit_1.7.4_pip_linux_x86.tgz をダウンロードしました。~~
+>
+> 2025年2月時点での最新 cisco_radkit_1.7.6_pip_linux_x86.tgz をダウンロードしました。
+>
 > ダウンロードしたファイルはWSLの/tmpとか、適当な場所に置いておきます。
 
 <br>
@@ -783,7 +783,7 @@ wheels_dirを作成して、そこにダウンロードしたファイルを展�
 ```bash
 mkdir wheels_dir
 cd wheels_dir
-tar xvfz /tmp/cisco_radkit_1.7.4_pip_linux_x86.tgz
+tar xvfz /tmp/cisco_radkit_1.7.6_pip_linux_x86.tgz
 ls -l
 ```
 
@@ -1217,7 +1217,7 @@ RADKitのインストーラを（Ciscoのアカウントなしに）自由にダ
 Ubuntuを起動した後でRADKitのインストールを手動で行いますが、ここもできるだけ自動化します。
 
 RADKitのインストーラを事前にダウンロードして、radkitを実行する仮想マシンからダウンロードできる場所においておきます。
-ここではHyper-Vを実行しているWindows母艦のIISのルートフォルダに置いておきます。
+ここではHyper-Vを実行しているWindows母艦のIISのルートフォルダ(/inetpub/wwwroot)に置いておきます。
 
 radkitを実行する仮想マシンにrootでログインして以下を実行することで、このリポジトリにおいたシェルスクリプトが実行され、RADkitのインストールが完了します。
 

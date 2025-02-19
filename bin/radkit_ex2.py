@@ -15,6 +15,11 @@ import webbrowser
 from pathlib import Path
 
 #
+# ローカルファイルから読み込み
+#
+from radkit_config import RADKIT_DOMAIN, RADKIT_CLIENT_ID, RADKIT_SERVICE_ID
+
+#
 # サードパーティライブラリのインポート
 #
 try:
@@ -136,11 +141,8 @@ if __name__ == '__main__':
 
     def main():
 
-        DOMAIN = "PROD"
-        CLIENT_ID = "iida@fujitsu.com"
-        SERVICE_ID = "1ryq-e8n8-5g5n"
-
         DEVICE_NAME = "r1"
+
         COMMAND = "show ip int brief"
 
         # キャッシュからトークンを取り出して、有効期限を確認する
@@ -148,7 +150,7 @@ if __name__ == '__main__':
         if token is None or (time.time() - timestamp) > 3600:
             # トークンが存在しない、もしくは有効期限切れの場合は再取得する
             with Client.create() as client:
-                connect_data = client.oauth_connect_only(CLIENT_ID, domain=DOMAIN)
+                connect_data = client.oauth_connect_only(RADKIT_CLIENT_ID, domain=RADKIT_DOMAIN)
 
                 ws = create_connection(str(connect_data.token_url))
                 webbrowser.open(str(connect_data.sso_url))
@@ -158,9 +160,9 @@ if __name__ == '__main__':
                 # このトークンは1時間有効なので、保存して再利用する
 
         with Client.create() as client:
-            token_client = client.access_token_login(token, domain=DOMAIN)
+            token_client = client.access_token_login(token, domain=RADKIT_DOMAIN)
 
-            service = token_client.service(SERVICE_ID).wait()
+            service = token_client.service(RADKIT_SERVICE_ID).wait()
 
             #print(service.status)
             #print(service.inventory)

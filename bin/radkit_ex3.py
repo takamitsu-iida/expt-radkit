@@ -14,6 +14,11 @@ import time
 from pathlib import Path
 
 #
+# ローカルファイルから読み込み
+#
+from radkit_config import RADKIT_DOMAIN, RADKIT_CLIENT_ID, RADKIT_SERVICE_ID
+
+#
 # サードパーティライブラリのインポート
 #
 
@@ -110,38 +115,21 @@ logger.addHandler(file_handler)
 # ここからスクリプト
 #
 
-# トークンを保存するファイルのパス
-TOKEN_FILE = log_dir.joinpath('token_cache.json')
-
-def save_token(token):
-    with open(TOKEN_FILE, 'w') as f:
-        json.dump({'access_token': token, 'timestamp': time.time()}, f)
-
-def load_token():
-    if TOKEN_FILE.exists():
-        with open(TOKEN_FILE, 'r') as f:
-            data = json.load(f)
-            return data.get('access_token'), data.get('timestamp')
-    return None, None
-
 if __name__ == '__main__':
 
     def main():
 
-        DOMAIN = "PROD"
-        CLIENT_ID = "iida@fujitsu.com"
-        SERVICE_ID = "1ryq-e8n8-5g5n"
-
         DEVICE_NAME = "r1"
+
         COMMAND = "show ip int brief"
 
         with Client.create() as client:
             client.certificate_login(
-                identity=CLIENT_ID,
-                domain=DOMAIN
+                identity=RADKIT_CLIENT_ID,
+                domain=RADKIT_DOMAIN
             )
 
-            service = client.service(SERVICE_ID).wait()
+            service = client.service(RADKIT_SERVICE_ID).wait()
 
             #print(service.status)
             #print(service.inventory)
