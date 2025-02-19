@@ -1183,9 +1183,11 @@ $
 
 <br><br><br><br><br>
 
-以下、自分用メモ。
+# 以下、自分用メモ
 
-Pythonのライブラリ `virl2_client` を使うとCML内のラボをスクリプトで作成できる。
+CMLを新規で作り直したときにこのRADkitのラボを手作業で作るのはしんどいので、自動化します。
+
+Pythonのライブラリ `virl2_client` を使うとCML内のラボをスクリプトで作成できます。
 
 > [!NOTE]
 >
@@ -1196,33 +1198,37 @@ Pythonのライブラリ `virl2_client` を使うとCML内のラボをスクリ�
 pip install virl2_client==2.8
 ```
 
-CMLに接続するためのIPアドレスやアカウント情報を `bin/cml_config.py` に埋め込んでいる。
+CMLに接続するためのIPアドレスやアカウント情報は `bin/cml_config.py` に埋め込みます。
 
-`bin/cml_create_lab.py` を実行すれば一瞬でラボを作れる。
+あとは `bin/cml_create_lab.py` を実行すれば一瞬でラボを作れます。
 
-このpythonスクリプトでは、ラボ定義ファイル `RADKit.yaml` をインポートするのと同等のことをvirl2_clientを使って実行している。
+<br>
 
-RADKitのインストーラを（Ciscoのアカウントなしに）自由にダウンロードできるなら、
-ダウンロードしてインストールするところまで完全に自動化できるのだが・・・
+> [!NOTE]
+>
+> このPythonスクリプトではラボ定義ファイル `RADKit.yaml` をインポートするのと同等のことをvirl2_clientを使って実行しています。
+>
+> 一度手作業でラボを完成させて、ラボ定義ファイルをダウンロードして、その中身を見ながらPythonスクリプトを書いています。
 
-Ubuntuを起動して、RADKitのインストールを手動で行う。
+<br>
 
-RADKitのインストーラを事前にダウンロードして、仮想マシンからダウンロードできる場所においておく。
-Hyper-Vを実行しているWindows母艦のIISのルートでよい。
+RADKitのインストーラを（Ciscoのアカウントなしに）自由にダウンロードできるなら、ダウンロードしてインストールするところまで完全に自動化できるのですが・・・
 
-radkitの仮想マシンにrootでログインして以下を実行することで、このリポジトリにおいたシェルスクリプトが実行され、RADkitのインストールは完了する。
+Ubuntuを起動した後でRADKitのインストールを手動で行いますが、ここもできるだけ自動化します。
+
+RADKitのインストーラを事前にダウンロードして、radkitを実行する仮想マシンからダウンロードできる場所においておきます。
+ここではHyper-Vを実行しているWindows母艦のIISのルートフォルダに置いておきます。
+
+radkitを実行する仮想マシンにrootでログインして以下を実行することで、このリポジトリにおいたシェルスクリプトが実行され、RADkitのインストールが完了します。
 
 ```bash
 curl -sf https://raw.githubusercontent.com/takamitsu-iida/expt-radkit/refs/heads/main/bin/install_radkit.sh | /bin/bash -s
 ```
 
-このシェルスクリプトの中身はこうなっている。
+このシェルスクリプトの中身はこうなっています。
 
 ```bash
 #!/bin/bash
-
-# 実行方法
-# curl -sf https://raw.githubusercontent.com/takamitsu-iida/expt-radkit/refs/heads/main/bin/install_radkit.sh | /bin/bash -s
 
 RADKIT_VERSION="1.7.6"
 
@@ -1251,4 +1257,6 @@ fi
 /bin/sh /opt/radkit/versions/${RADKIT_VERSION}/post-install.sh
 ```
 
-/opt/radkit/binをPATHに通す必要があるが、Ubuntu作成時にcloud-initの中ですでに作成しているので省略してよい。
+/opt/radkit/binをPATHに通さないといけませんが、Ubuntu作成時にcloud-initの中ですでに作成しているので省略できます。
+
+cloud-initの中でやるのか、このシェルスクリプトでやるのがいいか、ちょっと悩ましいところです。
